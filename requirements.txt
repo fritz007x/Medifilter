@@ -3,7 +3,11 @@ nibabel>=4.0.0
 scipy>=1.8.0
 numpy>=1.20.0
 scikit-image>=0.19.0
-opencv-python>=4.5.0
+# Choose one of the following OpenCV packages:
+# For environments with display capabilities:
+# opencv-python>=4.5.0
+# For headless environments (e.g. servers, containers):
+opencv-python-headless>=4.5.0
 matplotlib>=3.5.0
 pillow>=9.0.0
 SimpleITK>=2.1.0

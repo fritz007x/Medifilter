@@ -143,10 +143,18 @@ def apply_filter(image_data, filter_type, params):
         return filters.sobel_edge_detection(image_data, verbose=verbose)
     
     elif filter_type == "Adaptive Threshold":
-        block_size = params.get("block_size", 11)
-        C = params.get("C", 2)
-        verbose = params.get("verbose", 0)
-        return filters.adaptive_threshold(image_data, block_size=block_size, C=C, verbose=verbose)
+        try:
+            block_size = params.get("block_size", 11)
+            C = params.get("C", 2)
+            verbose = params.get("verbose", 0)
+            if not hasattr(filters, 'HAVE_CV2') or filters.HAVE_CV2:
+                return filters.adaptive_threshold(image_data, block_size=block_size, C=C, verbose=verbose)
+            else:
+                st.error("Adaptive Threshold requires OpenCV (cv2) which is not available in this environment.")
+                return image_data
+        except ImportError as e:
+            st.error(f"Error applying Adaptive Threshold: {str(e)}")
+            return image_data
     
     elif filter_type == "Laplacian Edge Detection":
         ksize = params.get("kernel_size", 3)

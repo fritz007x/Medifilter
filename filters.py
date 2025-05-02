@@ -5,8 +5,15 @@ import numpy as np
 import nibabel as nib
 from scipy import ndimage
 from skimage.filters import frangi, hessian
-import cv2
 import warnings
+
+# Try to import OpenCV, but provide a fallback if it fails
+try:
+    import cv2
+    HAVE_CV2 = True
+except ImportError:
+    HAVE_CV2 = False
+    warnings.warn("OpenCV (cv2) could not be imported. Some functionality may be limited.")
 
 # Import SimpleITK for the optimized Frangi filter
 try:
@@ -217,27 +224,33 @@ def adaptive_threshold(img, block_size=11, C=2, verbose=0):
     
     # Apply threshold
     if data.ndim == 2:
-        thresh = cv2.adaptiveThreshold(
-            data_uint8, 
-            255, 
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-            cv2.THRESH_BINARY, 
-            block_size, 
-            C
-        )
+        if HAVE_CV2:
+            thresh = cv2.adaptiveThreshold(
+                data_uint8, 
+                255, 
+                cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                cv2.THRESH_BINARY, 
+                block_size, 
+                C
+            )
+        else:
+            raise ImportError("OpenCV (cv2) is required for adaptive thresholding.")
     else:
         # For 3D or more dimensions, process slice by slice
         thresh = np.zeros_like(data_uint8)
         for i in range(data.shape[2] if data.ndim >= 3 else 1):
             if data.ndim >= 3:
-                thresh[:,:,i] = cv2.adaptiveThreshold(
-                    data_uint8[:,:,i], 
-                    255, 
-                    cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-                    cv2.THRESH_BINARY, 
-                    block_size, 
-                    C
-                )
+                if HAVE_CV2:
+                    thresh[:,:,i] = cv2.adaptiveThreshold(
+                        data_uint8[:,:,i], 
+                        255, 
+                        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                        cv2.THRESH_BINARY, 
+                        block_size, 
+                        C
+                    )
+                else:
+                    raise ImportError("OpenCV (cv2) is required for adaptive thresholding.")
     
     # Convert back to binary (0 and 1)
     thresh = thresh / 255
